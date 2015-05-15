@@ -7,6 +7,7 @@ CREATE TABLE users(
   CONSTRAINT users_pk PRIMARY KEY (id)
 );
 
+
 DROP TABLE IF EXISTS grids;
 CREATE TABLE grids(
 	codigo integer NOT NULL,
@@ -37,4 +38,5 @@ CREATE TABLE compuesta(
 	FOREIGN KEY (codigo) REFERENCES Partida (codigo),
 	PRIMARY KEY (pos_x,pos_y,codigo)
 );
+
 
