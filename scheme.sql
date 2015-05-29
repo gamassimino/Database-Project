@@ -4,10 +4,10 @@ create schema connect4_chino;
 --******--******--******--******--
 /*
 THIS DOMAIN WAS CREATED FOR MODELING THE RESULT OF A GAME
-IF THE PLAYER 1 WINS SO THE RESULT WILL BE PLAYER_1
-IF THE PLAYER 2 WINS SO THE RESULT WILL BE PLAYER_2
-IF THE GAME NO FINISHED SO THE RESULT WILL BE IN GAME
-IF THE GAME FINISHED BUT NO BODY WINS SO THE RESULT WILL BE DEAD_HEAT
+IF THE PLAYER 1 WINS SO THE RESULT WILL BE 'PLAYER_1'
+IF THE PLAYER 2 WINS SO THE RESULT WILL BE 'PLAYER_2'
+IF THE GAME DOESN'T FINISHED SO THE RESULT WILL BE 'IN GAME'
+IF THE GAME FINISHED BUT NO BODY WINS SO THE RESULT WILL BE 'DEAD_HEAT'
 */
 --******--******--******--******--
 create domain resultDomain as varchar(20)
@@ -94,7 +94,7 @@ create table cells(
 );
 --******--******--******--******--
 /*
-THIS TABLE REPRESENTS THE ASOSIATIONS N TO 1 BETWEEN THE TABLE CELLS WITH THE TABLE GAMES
+THIS TABLE REPRESENTS THE ASOSIATIONS ONE TO MANY(1..N) BETWEEN THE TABLE CELLS WITH THE TABLE GAMES
 */
 --******--******--******--******--
 drop table if exists composed;
@@ -109,7 +109,7 @@ create table composed(
 );
 --******--******--******--******--
 /*
-THIS TRIGGER VERIFY THE DATE OF THE USERS IF THEY HAVE GAMES INITIALIZADE TODAY THIS GAME NOT BE CREATED
+THIS TRIGGER VERIFY THE DATE OF THE USERS IF THEY HAVE GAMES INITIALIZADE TODAY, THEN THIS GAME NOT BE CREATED
 */
 --******--******--******--******--
 create function function_start_new_game() returns trigger as $trigger_start_new_game$
@@ -124,7 +124,7 @@ create function function_start_new_game() returns trigger as $trigger_start_new_
 	$trigger_start_new_game$
 	language 'plpgsql';
 
-create trigger trigger_start_new_game before insert on composed
+create trigger trigger_start_new_game before insert on games
 	for each row 
 	execute procedure function_start_new_game();
 --******--******--******--******--
@@ -134,9 +134,9 @@ THIS TRIGGER VERIFI IF THE POSITION EXISTS IN THE BOARD AND IF THIS POSITION NO 
 --******--******--******--******--
 create or replace function checkPosCells() returns trigger as $checkPosCells$
   begin
-  	if exists(select null from cells where id = new.id and new.pos_x = pos_x and new.pos_y = pos_y) then
-   		if ((new.rows <= (select rows from games where new.id = games.code)) and (new.rows >= 1)) then
-				if ((new.column <= (select columns from games where new.id = games.code)) and(new.columns >= 1)) then
+  	if not exists(select * from cells where cells.id = new.id and new.pos_x = cells.pos_x and new.pos_y = cells.pos_y) then
+   		if ((new.pos_x <= (select games.rows from games where new.id = games.code)) and (new.pos_x >= 1)) then
+				if ((new.pos_y <= (select columns from games where new.id = games.code)) and(new.pos_y >= 1)) then
 					return new;
 				else
 					raise exception 'the position is invalid';
@@ -177,7 +177,7 @@ create trigger checkSizeBoard before insert on games
 	execute procedure checkSizeBoard();
 --******--******--******--******--
 /*
-THIS TRIGGER AT THE MOMENT THAT A USER IS ELIMINATED, THIS INSERT THAT USER IN AN OTHER TABLE
+THIS TRIGGER IS LAUNCHED AT THE MOMENT THAT A USER IS ELIMINATED, THIS INSERT THAT USER IN AN OTHER TABLE
 */
 --******--******--******--******--
 create or replace function users_down() returns trigger as $users_down$
