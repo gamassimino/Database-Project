@@ -2,20 +2,40 @@ drop schema connect4_chino cascade;
 create schema connect4_chino;
 	set search_path = connect4_chino;
 --******--******--******--******--
+/*
+THIS DOMAIN WAS CREATED FOR MODELING THE RESULT OF A GAME
+IF THE PLAYER 1 WINS SO THE RESULT WILL BE PLAYER_1
+IF THE PLAYER 2 WINS SO THE RESULT WILL BE PLAYER_2
+IF THE GAME NO FINISHED SO THE RESULT WILL BE IN GAME
+IF THE GAME FINISHED BUT NO BODY WINS SO THE RESULT WILL BE DEAD_HEAT
+*/
+--******--******--******--******--
 create domain resultDomain as varchar(20)
 	default 'in_game'
 	check ((value='player_1')or(value='player_2')or(value='dead_heat')or(value='in_game'))
 	not null;
+--******--******--******--******--
+/*
+THIS DOMAIN WAS CREATED FOR MODELING THE VALUES POSIBLE IN THE COLUMNS
+*/
 --******--******--******--******--
 create domain columnDomain as integer
 	default 7
 	check ((value>=1)and(value<=10))
 	not null;
 --******--******--******--******--
+/*
+THIS DOMAIN WAS CREATED FOR MODELING THE VALUES POSIBLE IN THE ROWS
+*/
+--******--******--******--******--
 create domain rowDomain as integer
 	default 6
 	check ((value>=1)and(value<=8))
 	not null;
+--******--******--******--******--
+/*
+THIS TABLE MODELING AN USER WITH HER PERSONAL INFORMATION
+*/
 --******--******--******--******--
 drop table if exists users;
 create table users(
@@ -26,6 +46,10 @@ create table users(
 	primary key (email)
 );
 --******--******--******--******--
+/*
+THIS TABLE STORAGE THE DELETED USERS 
+*/
+--******--******--******--******--
 drop table if exists deleteUsers;
 create table deleteUsers(
  	email varchar(50) not null,
@@ -34,8 +58,11 @@ create table deleteUsers(
 	admin varchar(50),
 	primary key (email),
 	foreign KEY (email) references users (email) on delete cascade
-	-- foreign KEY (admin) references users (email)
 );
+--******--******--******--******--
+/*
+THIS TABLE MODELING A GAME OF TWO USERS
+*/
 --******--******--******--******--
 drop table if exists games;
 create table games(
@@ -53,6 +80,10 @@ create table games(
 	foreign key (player2) references users (email) on delete cascade
 );
 --******--******--******--******--
+/*
+THIS TABLE MODELING A CELLS (PIECE) IN THE BOARD
+*/
+--******--******--******--******--
 drop table if exists cells;
 create table cells(
 	id integer not null,
@@ -61,6 +92,10 @@ create table cells(
 	primary key (pos_x,pos_y),
 	foreign key (id) references games (code) on delete cascade
 );
+--******--******--******--******--
+/*
+THIS TABLE REPRESENTS THE ASOSIATIONS N TO 1 BETWEEN THE TABLE CELLS WITH THE TABLE GAMES
+*/
 --******--******--******--******--
 drop table if exists composed;
 create table composed(
@@ -73,6 +108,10 @@ create table composed(
 	foreign key (code) references games (code) on delete cascade
 );
 --******--******--******--******--
+/*
+THIS TRIGGER VERIFY THE DATE OF THE USERS IF THEY HAVE GAMES INITIALIZADE TODAY THIS GAME NOT BE CREATED
+*/
+--******--******--******--******--
 create function function_start_new_game() returns trigger as $trigger_start_new_game$
 	begin
 		if exists(select null from games where ((aDate=new.aDate)and((player1=new.player1)or(player2=new.player2))))then 
@@ -81,6 +120,7 @@ create function function_start_new_game() returns trigger as $trigger_start_new_
 			return new;
 		end if; 
 	end;
+
 	$trigger_start_new_game$
 	language 'plpgsql';
 
@@ -88,20 +128,24 @@ create trigger trigger_start_new_game before insert on composed
 	for each row 
 	execute procedure function_start_new_game();
 --******--******--******--******--
+/*
+THIS TRIGGER VERIFI IF THE POSITION EXISTS IN THE BOARD AND IF THIS POSITION NO ARE OCUPATED
+*/
+--******--******--******--******--
 create or replace function checkPosCells() returns trigger as $checkPosCells$
   begin
-  	if exists(select null from cells where id = new.id and new.pos_x = pos_x and new.pos_y = pos_y)then
-   		if((new.rows <= (select rows from games where new.id = games.code)) and (new.rows >= 1))then
-				if((new.column <= (select columns from games where new.id = games.code)) and(new.columns >= 1))then
+  	if exists(select null from cells where id = new.id and new.pos_x = pos_x and new.pos_y = pos_y) then
+   		if ((new.rows <= (select rows from games where new.id = games.code)) and (new.rows >= 1)) then
+				if ((new.column <= (select columns from games where new.id = games.code)) and(new.columns >= 1)) then
 					return new;
 				else
-					raise exception 'holaaaaaa';
+					raise exception 'the position is invalid';
 				end if;
   		else
-  			raise exception 'holaaaaaa';
+  			raise exception 'the position is invalid';
   		end if;
    	else
-   		raise exception 'holaaaaaa';
+   		raise exception 'the position is invalid';
    	end if; 
   end;
 
@@ -111,6 +155,10 @@ create or replace function checkPosCells() returns trigger as $checkPosCells$
 create trigger checkPosCells before insert on cells 
 	for each row
 	execute procedure checkPosCells();
+--******--******--******--******--
+/*
+THIS TRIGGER VERIFY THE SIZE OF THE BOARD BE A CORRECT SIZE
+*/
 --******--******--******--******--
 create or replace function checkSizeBoard() returns trigger as $checkSizeBoard$
   begin
@@ -128,18 +176,27 @@ create trigger checkSizeBoard before insert on games
 	for each row
 	execute procedure checkSizeBoard();
 --******--******--******--******--
+/*
+THIS TRIGGER AT THE MOMENT THAT A USER IS ELIMINATED, THIS INSERT THAT USER IN AN OTHER TABLE
+*/
+--******--******--******--******--
 create or replace function users_down() returns trigger as $users_down$
   begin
    insert into deleteUsers(email,first_name,last_name) values
   	(old.email,old.first_name,old.last_name,current_user);
    return new;
   end;
+
   $users_down$ 
   language 'plpgsql';
 
 create trigger users_down after delete on users 
 	for each row
 	execute procedure users_down();
+--******--******--******--******--
+/*
+HERE WE INSERTS A VALUES IN THE DB
+*/
 --******--******--******--******--
 insert into users values
 	('gamassimino01@gmail.com','gaston','massimino',1),
