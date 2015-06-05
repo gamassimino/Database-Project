@@ -115,8 +115,6 @@ create function function_start_new_game() returns trigger as $trigger_start_new_
 		if exists(select null from games where ((date_begin=new.date_begin)and(((player1=new.player2)or(player1=new.player1))or((player2=new.player1)or(player2=new.player2)))))then 
 			raise exception 'there is a started game';
 		else
-			insert into games (date_begin,hour_begin,date_end,hour_end,result,player1,player2,rows,columns,code)values 
-				(now(),now(),now(),now(),new.result,new.player1,new.player2,new.rows,new.columns,1);
 			return new;
 		end if; 
 	end;
