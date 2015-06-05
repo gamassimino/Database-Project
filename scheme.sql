@@ -1,4 +1,4 @@
-drop schema connect4_chino cascade;
+﻿drop schema connect4_chino cascade;
 create schema connect4_chino;
 	set search_path = connect4_chino;
 --******--******--******--******--
@@ -42,7 +42,6 @@ create table users(
 	email varchar(50) not null,
 	first_name varchar(50),
 	last_name varchar(50),
-	id integer,
 	primary key (email)
 );
 --******--******--******--******--
@@ -52,12 +51,12 @@ THIS TABLE STORAGE THE DELETED USERS
 --******--******--******--******--
 drop table if exists deleteUsers;
 create table deleteUsers(
- 	email varchar(50) not null,
+ 	email varchar(50) ,
 	first_name varchar(50),
 	last_name varchar(50),
 	admin varchar(50),
-	primary key (email),
-	foreign KEY (email) references users (email) on delete cascade
+	delete_date date,
+	primary key (email)
 );
 --******--******--******--******--
 /*
@@ -66,15 +65,16 @@ THIS TABLE MODELING A GAME OF TWO USERS
 --******--******--******--******--
 drop table if exists games;
 create table games(
-	code integer not null,
-	aDate date,
+	date_begin date,
 	hour_begin time,
+	date_end date,
 	hour_end time,
 	result resultDomain,
 	player1 varchar(50) not null,
 	player2 varchar(50) not null,
 	rows rowDomain,
 	columns columnDomain,
+	code serial,
 	primary key (code),
 	foreign key (player1) references users (email) on delete cascade,
 	foreign key (player2) references users (email) on delete cascade
@@ -86,11 +86,9 @@ THIS TABLE MODELING A CELLS (PIECE) IN THE BOARD
 --******--******--******--******--
 drop table if exists cells;
 create table cells(
-	id integer not null,
 	pos_x columnDomain,
 	pos_y rowDomain,
-	primary key (pos_x,pos_y),
-	foreign key (id) references games (code) on delete cascade
+	primary key (pos_x,pos_y)
 );
 --******--******--******--******--
 /*
@@ -102,7 +100,7 @@ create table composed(
 	pos_x integer not null,
 	pos_y integer not null,
 	code integer not null,
-	play_order varchar(50) not null,
+	play_order serial,
 	primary key (code,pos_x,pos_y),
 	foreign key (pos_x,pos_y) references cells (pos_x,pos_y) on delete cascade,
 	foreign key (code) references games (code) on delete cascade
@@ -114,9 +112,11 @@ THIS TRIGGER VERIFY THE DATE OF THE USERS IF THEY HAVE GAMES INITIALIZADE TODAY,
 --******--******--******--******--
 create function function_start_new_game() returns trigger as $trigger_start_new_game$
 	begin
-		if exists(select null from games where ((aDate=new.aDate)and((player1=new.player1)or(player2=new.player2))))then 
+		if exists(select null from games where ((date_begin=new.date_begin)and(((player1=new.player2)or(player1=new.player1))or((player2=new.player1)or(player2=new.player2)))))then 
 			raise exception 'there is a started game';
 		else
+			insert into games (date_begin,hour_begin,date_end,hour_end,result,player1,player2,rows,columns,code)values 
+				(now(),now(),now(),now(),new.result,new.player1,new.player2,new.rows,new.columns,1);
 			return new;
 		end if; 
 	end;
@@ -134,9 +134,9 @@ THIS TRIGGER VERIFI IF THE POSITION EXISTS IN THE BOARD AND IF THIS POSITION NO 
 --******--******--******--******--
 create or replace function checkPosCells() returns trigger as $checkPosCells$
   begin
-  	if not exists(select * from cells where cells.id = new.id and new.pos_x = cells.pos_x and new.pos_y = cells.pos_y) then
-   		if ((new.pos_x <= (select games.rows from games where new.id = games.code)) and (new.pos_x >= 1)) then
-				if ((new.pos_y <= (select columns from games where new.id = games.code)) and(new.pos_y >= 1)) then
+  	if not exists(select * from composed where new.pos_x = composed.pos_x and new.pos_y = composed.pos_y) then
+   		if ((new.pos_x <= (select games.rows from games where new.code = games.code)) and (new.pos_x >= 1)) then
+				if ((new.pos_y <= (select columns from games where new.code = games.code)) and(new.pos_y >= 1)) then
 					return new;
 				else
 					raise exception 'the position is invalid';
@@ -152,7 +152,7 @@ create or replace function checkPosCells() returns trigger as $checkPosCells$
   $checkPosCells$ 
   language 'plpgsql';
 
-create trigger checkPosCells before insert on cells 
+create trigger checkPosCells before insert on composed 
 	for each row
 	execute procedure checkPosCells();
 --******--******--******--******--
@@ -182,8 +182,8 @@ THIS TRIGGER IS LAUNCHED AT THE MOMENT THAT A USER IS ELIMINATED, THIS INSERT TH
 --******--******--******--******--
 create or replace function users_down() returns trigger as $users_down$
   begin
-   insert into deleteUsers(email,first_name,last_name) values
-  	(old.email,old.first_name,old.last_name,current_user);
+   insert into deleteUsers(email,first_name,last_name,admin) values
+  	(old.email,old.first_name,old.last_name,current_user,now());
    return new;
   end;
 
@@ -199,26 +199,96 @@ HERE WE INSERTS A VALUES IN THE DB
 */
 --******--******--******--******--
 insert into users values
-	('gamassimino01@gmail.com','gaston','massimino',1),
-	('ezedepetris@gmail.com','ezequiel','depetris',2);
+	('gamassimino01@gmail.com','gaston','massimino'),
+	('ezedepetris@gmail.com','ezequiel','depetris');
 --******--******--******--******--
 insert into games values
-	(1,now(),now(),now(),'player_1','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7);
+	(now(),now(),now(),now(),'player_1','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7);
 --******--******--******--******--
 insert into cells values
-	(1,1,1),
-	(1,1,2),
-	(1,1,3),
-	(1,1,4),
-	(1,2,1),
-	(1,2,2),
-	(1,2,3);
+	(1,1),
+	(1,2),
+	(1,3),
+	(1,4),
+	(1,5),
+	(1,6),
+	(1,7),
+	(2,1),
+	(2,2),
+	(2,3),
+	(2,4),
+	(2,5),
+	(2,6),
+	(2,7),
+	(3,1),
+	(3,2),
+	(3,3),
+	(3,4),
+	(3,5),
+	(3,6),
+	(3,7),
+	(4,1),
+	(4,2),
+	(4,3),
+	(4,4),
+	(4,5),
+	(4,6),
+	(4,7),
+	(5,1),
+	(5,2),
+	(5,3),
+	(5,4),
+	(5,5),
+	(5,6),
+	(5,7),
+	(6,1),
+	(6,2),
+	(6,3),
+	(6,4),
+	(6,5),
+	(6,6),
+	(6,7),
+	(7,1),
+	(7,2),
+	(7,3),
+	(7,4),
+	(7,5),
+	(7,6),
+	(7,7),
+	(8,1),
+	(8,2),
+	(8,3),
+	(8,4),
+	(8,5),
+	(8,6),
+	(8,7),
+	(9,1),
+	(9,2),
+	(9,3),
+	(9,4),
+	(9,5),
+	(9,6),
+	(9,7),
+	(10,1),
+	(10,2),
+	(10,3),
+	(10,4),
+	(10,5),
+	(10,6),
+	(10,7),
+	(1,8),
+	(2,8),
+	(3,8),
+	(4,8),
+	(5,8),
+	(6,8),
+	(7,8);
 --******--******--******--******--
 insert into composed values
-	(1,1,1,1),
-	(1,2,1,2),
-	(1,3,1,3),
-	(1,4,1,4),
-	(2,1,1,5),
-	(2,2,1,6),
-	(2,3,1,7);
+	(1,1,1),
+	(1,2,1),
+	(1,3,1),
+	(1,4,1),
+	(2,1,1),
+	(2,2,1),
+	(2,3,1);
