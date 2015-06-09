@@ -20,15 +20,14 @@ public class App{
 		statement.execute();
 
 /*********************************GET VALUES***********************************************/
-		String email = "samuelitox@gmail.com";
+		String email = "gamas@gmail.com";
 		String first_name = "samuel";
 		String last_name = "samuelo";
 		Dictionary dictionary = new Dictionary();
 /******************************************************************************************/
 
 /*********************************INSERT USER**********************************************/
-    //query = "insert into users values('"+email+"','"+first_name+"','"+last_name+"')";
-	query = dictionary.insertUser(email,first_name,last_name);
+	query = dictionary.insertUsers(email,first_name,last_name);
     statement = connection.prepareStatement(query);
     int reg = statement.executeUpdate();
 
@@ -43,20 +42,21 @@ public class App{
 /******************************************************************************************/
 
 /*******************************DELETE USER************************************************/
- 	// query = "delete from users where (email = 'gamas@gmail.com')";
-  //   statement = connection.prepareStatement(query);
-  //   reg = statement.executeUpdate();
+ 	query = dictionary.deleteUsers(email);
+    statement = connection.prepareStatement(query);
+    int reg = statement.executeUpdate();
 
-  //   query = "select * from deleteUsers";
-  //   statement = connection.prepareStatement(query);
-  //   resultSet = statement.executeQuery();
-  //   while(resultSet.next()){
-  //     	System.out.println(resultSet.getString("email"));
-  //     	System.out.println(resultSet.getString("first_name"));
-  //     	System.out.println(resultSet.getString("last_name"));
-  //     	System.out.println(resultSet.getString("admin"));
-  //     	System.out.println(resultSet.getString("delete_date"));
-  //   }
+    query = "select * from deleteUsers";
+    statement = connection.prepareStatement(query);
+    ResultSet resultSet = statement.executeQuery();
+    
+    while(resultSet.next()){
+      	System.out.println(resultSet.getString("email"));
+      	System.out.println(resultSet.getString("first_name"));
+      	System.out.println(resultSet.getString("last_name"));
+      	System.out.println(resultSet.getString("admin"));
+      	System.out.println(resultSet.getString("delete_date"));
+    }
 /******************************************************************************************/
 
 /*******************************SHOW GAMES*************************************************/

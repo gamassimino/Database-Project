@@ -1,11 +1,11 @@
 public class Dictionary{
 
-	public String insertUser(String email, String first_name, String last_name){
+	public String insertUsers(String email, String first_name, String last_name){
 		return "insert into users values('"+email+"','"+first_name+"','"+last_name+"')";
 	}
 
-	public String deleteUser(String email, String first_name, String last_name){
-		return "insert into users values('"+email+"','"+first_name+"','"+last_name+"',current_user,now())";
+	public String deleteUsers(String email){
+		return "delete from users where (email = '"+email+"')";
 	}
 
 	public String showGames(String email){
