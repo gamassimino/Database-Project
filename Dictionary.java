@@ -5,7 +5,7 @@ public class Dictionary{
 	}
 
 	public String deleteUser(String email, String first_name, String last_name){
-		return "insert into users values("+email+","+first_name+","+last_name+","+current_user+","+now()+")";
+		return "insert into users values("+email+","+first_name+","+last_name+",current_user,now())";
 	}
 
 	public String showGames(String email){
