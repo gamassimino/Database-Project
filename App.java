@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.util.Scanner;
 
 public class App{
 
@@ -19,49 +20,94 @@ public class App{
 		PreparedStatement statement = connection.prepareStatement(query);
 		statement.execute();
 
-/*********************************GET VALUES***********************************************/
-		String email = "gamas@gmail.com";
-		String first_name = "samuel";
-		String last_name = "samuelo";
 		Dictionary dictionary = new Dictionary();
-/******************************************************************************************/
+		String email;
+		String first_name;
+		String last_name;
 
-/*********************************INSERT USER**********************************************/
-	query = dictionary.insertUsers(email,first_name,last_name);
-    statement = connection.prepareStatement(query);
-    int reg = statement.executeUpdate();
+	boolean condition = true;
+	while(condition){
+		for(int i=0; i<21; i++){
+			System.out.println("\n");
+		}
+		System.out.println("WELCOME TO CONNECT_4");
+		System.out.println("Press (1) to insert a new user");
+		System.out.println("Press (2) to delete an existing user");
+		System.out.println("Press (3) for show all games of some user");
+		System.out.println("Press other number for exit");
 
-    query = "select * from users";
-    statement = connection.prepareStatement(query);
-    ResultSet resultSet = statement.executeQuery();
-    while(resultSet.next()){
-        System.out.println(resultSet.getString("email"));
-      	System.out.println(resultSet.getString("first_name"));
-      	System.out.println(resultSet.getString("last_name"));
-    }
-/******************************************************************************************/
+		Scanner keyboard = new Scanner(System.in);
+		System.out.println("Enter an option: ");
+		int myint = keyboard.nextInt();
 
-/*******************************DELETE USER************************************************/
- 	query = dictionary.deleteUsers(email);
-    statement = connection.prepareStatement(query);
-    int reg = statement.executeUpdate();
-
-    query = "select * from deleteUsers";
-    statement = connection.prepareStatement(query);
-    ResultSet resultSet = statement.executeQuery();
-    
-    while(resultSet.next()){
-      	System.out.println(resultSet.getString("email"));
-      	System.out.println(resultSet.getString("first_name"));
-      	System.out.println(resultSet.getString("last_name"));
-      	System.out.println(resultSet.getString("admin"));
-      	System.out.println(resultSet.getString("delete_date"));
-    }
-/******************************************************************************************/
-
-/*******************************SHOW GAMES*************************************************/
-
-/******************************************************************************************/
+		if(myint == 1){
+			Scanner option = new Scanner(System.in);
+			System.out.println("email: ");
+			email = option.next();
+			System.out.println("first name: ");
+			first_name = option.next();
+			System.out.println("last name: ");
+			last_name = option.next();
+			query = dictionary.insertUsers(email,first_name,last_name);
+		    statement = connection.prepareStatement(query);
+		    int reg = statement.executeUpdate();
+		    query = "select * from users";
+		    statement = connection.prepareStatement(query);
+		    /*ResultSet resultSet = statement.executeQuery();
+		    while(resultSet.next()){
+		        System.out.println(resultSet.getString("email"));
+		      	System.out.println(resultSet.getString("first_name"));
+		      	System.out.println(resultSet.getString("last_name"));
+		    }*/
+		}
+		else{
+			if (myint == 2){
+				Scanner option = new Scanner(System.in);
+				System.out.println("email: ");
+				email = option.next();
+				query = dictionary.deleteUsers(email);
+			    statement = connection.prepareStatement(query);
+			    int reg = statement.executeUpdate();
+			    query = "select * from deleteUsers";
+			    statement = connection.prepareStatement(query);
+			   /* ResultSet resultSet = statement.executeQuery();
+			    while(resultSet.next()){
+			      	System.out.println(resultSet.getString("email"));
+			      	System.out.println(resultSet.getString("first_name"));
+			      	System.out.println(resultSet.getString("last_name"));
+			      	System.out.println(resultSet.getString("admin"));
+			      	System.out.println(resultSet.getString("delete_date"));
+			    }*/
+			}
+			else{
+				if (myint == 3){
+					Scanner option = new Scanner(System.in);
+					System.out.println("email: ");
+					email = option.next();
+					query = dictionary.showGames(email);
+					statement = connection.prepareStatement(query);
+			    	ResultSet resultSet = statement.executeQuery();
+			    	while(resultSet.next()){
+			    		if (resultSet.getString("player1")!=null){
+					      	System.out.println(resultSet.getString("player1"));
+					      	System.out.println(resultSet.getString("code"));
+					      	System.out.println(resultSet.getString("date_begin"));
+					      	System.out.println(resultSet.getString("date_end"));
+				      	}
+				      	if (resultSet.getString("player2")!=null){
+					      	System.out.println(resultSet.getString("player2"));
+					      	System.out.println(resultSet.getString("code"));
+					      	System.out.println(resultSet.getString("date_begin"));
+					      	System.out.println(resultSet.getString("date_end"));
+				      	}
+			   		}
+				}
+				else{
+					condition = false;
+				}
+			}
+		}
+	}
     
     } catch(ClassNotFoundException cnfe) {
       System.err.println("Error loading driver: " + cnfe);
