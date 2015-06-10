@@ -7,7 +7,7 @@ public class App{
 
     try {
 		String driver = "org.postgresql.Driver";
-		String url = "jdbc:postgresql://localhost:5432/connec4";
+		String url = "jdbc:postgresql://localhost:5432/connect4";
 		String username = "postgres";
 		String password = "root";
 
@@ -86,21 +86,18 @@ public class App{
 					email = option.next();
 					query = dictionary.showGames(email);
 					statement = connection.prepareStatement(query);
-			    	ResultSet resultSet = statement.executeQuery();
-			    	while(resultSet.next()){
-			    		if (resultSet.getString("player1")!=null){
-					      	System.out.println(resultSet.getString("player1"));
-					      	System.out.println(resultSet.getString("code"));
-					      	System.out.println(resultSet.getString("date_begin"));
-					      	System.out.println(resultSet.getString("date_end"));
-				      	}
-				      	if (resultSet.getString("player2")!=null){
-					      	System.out.println(resultSet.getString("player2"));
-					      	System.out.println(resultSet.getString("code"));
-					      	System.out.println(resultSet.getString("date_begin"));
-					      	System.out.println(resultSet.getString("date_end"));
-				      	}
-			   		}
+		    	ResultSet resultSet = statement.executeQuery();
+		    	for(int j=0; j<21; j++)
+		    		System.out.println();
+		    	while(resultSet.next()){
+		      	System.out.println(resultSet.getString("email"));
+		      	System.out.println(resultSet.getString("code"));
+		      	System.out.println(resultSet.getString("date_begin"));
+		      	System.out.println(resultSet.getString("date_end"));
+		      	System.out.println();
+		   		}
+		   		System.out.println("press any key to continue");
+		   		email = option.next();
 				}
 				else{
 					condition = false;

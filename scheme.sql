@@ -65,9 +65,9 @@ THIS TABLE MODELING A GAME OF TWO USERS
 --******--******--******--******--
 drop table if exists games;
 create table games(
-	date_begin date,
+	date_begin timestamp,
 	hour_begin time,
-	date_end date,
+	date_end timestamp,
 	hour_end time,
 	result resultDomain,
 	player1 varchar(50) not null,
@@ -112,7 +112,7 @@ THIS TRIGGER VERIFY THE DATE OF THE USERS IF THEY HAVE GAMES INITIALIZADE TODAY,
 --******--******--******--******--
 create function function_start_new_game() returns trigger as $trigger_start_new_game$
 	begin
-		if exists(select null from games where ((date_begin=new.date_begin)and(((player1=new.player2)or(player1=new.player1))or((player2=new.player1)or(player2=new.player2)))))then 
+		if exists(select null from games where ((date_end>new.date_begin)and(((player1=new.player2)or(player1=new.player1))or((player2=new.player1)or(player2=new.player2)))))then 
 			raise exception 'there is a started game';
 		else
 			return new;
@@ -132,7 +132,7 @@ THIS TRIGGER VERIFI IF THE POSITION EXISTS IN THE BOARD AND IF THIS POSITION NO 
 --******--******--******--******--
 create or replace function checkPosCells() returns trigger as $checkPosCells$
   begin
-  	if not exists(select * from composed where new.pos_x = composed.pos_x and new.pos_y = composed.pos_y) then
+  	if not exists(select null from composed where new.pos_x = composed.pos_x and new.pos_y = composed.pos_y and new.code = composed.code) then
    		if ((new.pos_x <= (select games.rows from games where new.code = games.code)) and (new.pos_x >= 1)) then
 				if ((new.pos_y <= (select columns from games where new.code = games.code)) and(new.pos_y >= 1)) then
 					return new;
@@ -198,95 +198,46 @@ HERE WE INSERTS A VALUES IN THE DB
 --******--******--******--******--
 insert into users values
 	('gamassimino01@gmail.com','gaston','massimino'),
-	('ezedepetris@gmail.com','ezequiel','depetris');
+	('ezedepetris@gmail.com','ezequiel','depetris'),
+	('javierblanco@gmail.com','javier','blanco');
 --******--******--******--******--
 insert into games values
-	(now(),now(),now(),now(),'player_1','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7);
+
+
+	('2010-01-01','19:00:11.84522','2011-02-02','20:00:11.84522','player_1','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7),
+	('2012-03-01','19:00:11.84522','2013-03-02','20:00:11.84522','player_2','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7),
+	('2014-03-03','21:00:11.84522','2015-04-04','22:00:11.84522','player_1','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7),
+	('2016-03-03','21:00:11.84522','2017-03-04','22:00:11.84522','player_2','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7),
+	('2018-05-05','23:00:11.84522','2019-06-06','23:09:11.84522','player_1','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7),
+	('2020-05-05','23:00:11.84522','2021-05-06','23:09:11.84522','player_2','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7),
+	('2022-07-07','23:10:11.84522','2023-08-08','23:11:11.84522','player_1','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7),
+	('2024-07-07','23:10:11.84522','2025-07-08','23:11:11.84522','player_2','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7),
+	('2026-09-09','23:30:11.84522','2027-10-10','23:50:11.84522','player_1','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7),
+	('2028-09-09','23:30:11.84522','2029-09-10','23:50:11.84522','in_game','gamassimino01@gmail.com','ezedepetris@gmail.com',6,7),
+	('2029-09-10','23:30:11.84522','2050-09-10','23:50:11.84522','player_2','javierblanco@gmail.com','ezedepetris@gmail.com',6,7);
 --******--******--******--******--
 insert into cells values
-	(1,1),
-	(1,2),
-	(1,3),
-	(1,4),
-	(1,5),
-	(1,6),
-	(1,7),
-	(2,1),
-	(2,2),
-	(2,3),
-	(2,4),
-	(2,5),
-	(2,6),
-	(2,7),
-	(3,1),
-	(3,2),
-	(3,3),
-	(3,4),
-	(3,5),
-	(3,6),
-	(3,7),
-	(4,1),
-	(4,2),
-	(4,3),
-	(4,4),
-	(4,5),
-	(4,6),
-	(4,7),
-	(5,1),
-	(5,2),
-	(5,3),
-	(5,4),
-	(5,5),
-	(5,6),
-	(5,7),
-	(6,1),
-	(6,2),
-	(6,3),
-	(6,4),
-	(6,5),
-	(6,6),
-	(6,7),
-	(7,1),
-	(7,2),
-	(7,3),
-	(7,4),
-	(7,5),
-	(7,6),
-	(7,7),
-	(8,1),
-	(8,2),
-	(8,3),
-	(8,4),
-	(8,5),
-	(8,6),
-	(8,7),
-	(9,1),
-	(9,2),
-	(9,3),
-	(9,4),
-	(9,5),
-	(9,6),
-	(9,7),
-	(10,1),
-	(10,2),
-	(10,3),
-	(10,4),
-	(10,5),
-	(10,6),
-	(10,7),
-	(1,8),
-	(2,8),
-	(3,8),
-	(4,8),
-	(5,8),
-	(6,8),
-	(7,8);
+	(1,1),	(1,2),	(1,3),	(1,4),	(1,5),	(1,6),	(1,7),
+	(2,1),	(2,2),	(2,3),	(2,4),	(2,5),	(2,6),	(2,7),
+	(3,1),	(3,2),	(3,3),	(3,4),	(3,5),	(3,6),	(3,7),
+	(4,1),	(4,2),	(4,3),	(4,4),	(4,5),	(4,6),	(4,7),
+	(5,1),	(5,2),	(5,3),	(5,4),	(5,5),	(5,6),	(5,7),
+	(6,1),	(6,2),	(6,3),	(6,4),	(6,5),	(6,6),	(6,7),
+	(7,1),	(7,2),	(7,3),	(7,4),	(7,5),	(7,6),	(7,7),
+	(8,1),	(8,2),	(8,3),	(8,4),	(8,5),	(8,6),	(8,7),
+	(9,1),	(9,2),	(9,3),	(9,4),	(9,5),	(9,6),	(9,7),
+	(10,1),	(10,2),	(10,3),	(10,4),	(10,5),	(10,6),	(10,7),
+	(1,8),	(2,8),	(3,8),	(4,8),	(5,8),	(6,8),	(7,8);
 --******--******--******--******--
 insert into composed values
-	(1,1,1),
-	(1,2,1),
-	(1,3,1),
-	(1,4,1),
-	(2,1,1),
-	(2,2,1),
-	(2,3,1);
+	(1,1,1),	(1,2,1),	(1,3,1),	(1,4,1),	(2,1,1),	(2,2,1),	(2,3,1),
+	(1,1,2),	(1,2,2),	(1,3,2),	(1,4,2),	(2,1,2),	(2,2,2),	(2,3,2),
+	(1,1,3),	(1,2,3),	(1,3,3),	(1,4,3),	(2,1,3),	(2,2,3),	(2,3,3),
+	(1,1,4),	(1,2,4),	(1,3,4),	(1,4,4),	(2,1,4),	(2,2,4),	(2,3,4),
+	(1,1,5),	(1,2,5),	(1,3,5),	(1,4,5),	(2,1,5),	(2,2,5),	(2,3,5),
+	(1,1,6),	(1,2,6),	(1,3,6),	(1,4,6),	(2,1,6),	(2,2,6),	(2,3,6),
+	(1,1,7),	(1,2,7),	(1,3,7),	(1,4,7),	(2,1,7),	(2,2,7),	(2,3,7),
+	(1,1,8),	(1,2,8),	(1,3,8),	(1,4,8),	(2,1,8),	(2,2,8),	(2,3,8),
+	(1,1,9),	(1,2,9),	(1,3,9),	(1,4,9),	(2,1,9),	(2,2,9),	(2,3,9),
+	(1,1,10),	(1,2,10),	(1,3,10),	(1,4,10),	(2,1,10),	(2,2,10),	(2,3,10),
+	(1,1,11),	(1,2,11),	(1,3,11),	(1,4,11),	(2,1,11),	(2,2,11),	(2,3,11);
